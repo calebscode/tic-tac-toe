@@ -91,6 +91,14 @@ const GameController = (function () {
 
     const getActivePlayer = () => activePlayer;
 
+    const setPlayerName = (playerNum, newName) => {
+        if (playerNum == 1) {
+            players[0].name = newName;
+        } else {
+            players[1].name = newName;
+        }
+    }
+
     const switchPlayers = () => {
         activePlayer = getActivePlayer().token == 'X' ? players[1] : players[0];
     }
@@ -102,51 +110,88 @@ const GameController = (function () {
     const getGameState = () => {
         return {
             activePlayer: getActivePlayer(),
-            board: board.getBoard()
+            board: board.getBoard(),
+            winner: board.checkForWin()
         }
+    }
+
+    const isGameOver = () => {
+        return board.checkForWin() != ' ';
     }
 
     const playTurn = (row, col) => {
-        console.log(`${getActivePlayer().name} places an ${getActivePlayer().token} at (${col},${row}).`)
+        //console.log(`${getActivePlayer().name} places an ${getActivePlayer().token} at (${col},${row}).`)
         makePlayerMove(row, col, getActivePlayer().token);
 
-        board.logBoard();
-
-        // check for win conditions
-        if (board.checkForWin() != ' ') {
-            console.log(`${getActivePlayer().name} wins!`);
-            console.log("Let's play again.");
-            board.clearBoard();
-            board.logBoard();
+        //board.logBoard();
+        if (!isGameOver()) {
+            switchPlayers();
         }
-
-        switchPlayers();
-        console.log(`${getActivePlayer().name}'s turn. Make a move!`);
+        
+        DisplayController.renderGame(getGameState());
+        //console.log(`${getActivePlayer().name}'s turn. Make a move!`);
     }
 
-    return { playTurn, getGameState };
+    return { playTurn, getGameState, setPlayerName };
 
 })();
 
 const DisplayController = (function () {
     // cache DOM
     const gameRoot = document.querySelector("#game-root");
+    const player1Name = document.querySelector("#p1-name");
+    const player2Name = document.querySelector("#p2-name");
 
-    const renderGame = ({ activePlayer, board }) => {
+    // click handler functions
+    player1Name.addEventListener("focusout", () => {
+        GameController.setPlayerName(1, player1Name.textContent);
+        renderGame(GameController.getGameState()); // re-render info-text with new name
+    });
+
+    player2Name.addEventListener("focusout", () => {
+        GameController.setPlayerName(2, player2Name.textContent);
+        renderGame(GameController.getGameState()); // re-render info-text with new name
+    });
+    
+    // main render function
+    const renderGame = ({ activePlayer, board, winner }) => {
+        // clear DOM
         gameRoot.innerHTML = '';
-        const whoseTurn = document.createElement("h2");
-        whoseTurn.textContent = `${activePlayer.name}'s turn to place an ${activePlayer.token}`;
-        gameRoot.appendChild(whoseTurn);
+
+        // render the board
+        const boardElement = document.createElement('div');
+        boardElement.id = "game-board"
 
         for (let row = 0; row < board.length; row++) {
             for (let col = 0; col < board[row].length; col++) {
-                const cell = document.createElement('span');
+                const cell = document.createElement('h1');
+                cell.className = 'cell';
+                cell.dataset.row = row;
+                cell.dataset.col = col;
                 cell.textContent = board[row][col];
-                gameRoot.appendChild(cell);
+                if (cell.textContent == " ") {
+                    cell.addEventListener("click", () => GameController.playTurn(cell.dataset.row, cell.dataset.col));
+                }
+                boardElement.appendChild(cell);
             }
-            gameRoot.appendChild(document.createElement('br'));
         }
+
+        gameRoot.appendChild(boardElement);
+
+        // render some helpful text based on the turn/winner
+        const instructionText = document.createElement("h2");
+        if (winner == ' ') {
+            instructionText.textContent = `${activePlayer.name}'s turn to place an ${activePlayer.token}`;
+        } else if (winner == 'tie!') {
+            instructionText.textContent = `It's a tie! Let's play again.`;
+        } else {
+            instructionText.textContent = `${activePlayer.name} wins!`;
+        }
+
+        gameRoot.appendChild(instructionText);
     }
+
+    renderGame(GameController.getGameState());
 
     return { renderGame };
 })();
