@@ -1,9 +1,9 @@
 // Gameboard IIFE module
 const Gameboard = (function () {
     let gameboard = [
-        ['X', 'X', 'O'],
-        ['O', ' ', 'X'],
-        ['O', 'O', 'X']
+        ['X', 'X', ' '],
+        ['O', 'O', 'X'],
+        ['X', 'O', 'X']
     ];
 
     const clearBoard = () => {
@@ -54,7 +54,18 @@ const Gameboard = (function () {
         if (gameboard[0][2] != ' ' && (gameboard[0][2] == gameboard[1][1]) && (gameboard[1][1] == gameboard[2][0])) {
             return gameboard[1][1];
         }
-        return ' ';
+
+        // checks for any playable spaces
+        for (let i = 0; i < gameboard.length; i++) {
+            for (let j = 0; j < gameboard[i].length; j++) {
+              if (gameboard[i][j] == ' ') {
+                return ' ';
+              }
+            }
+          }
+
+        // if all other checks failed, its a dead tie
+        return 'tie!';
     }
 
     return { logBoard, makeMove, clearBoard, getBoard, checkForWin }
@@ -106,6 +117,6 @@ const GameController = (function () {
         console.log(`${getActivePlayer().name}'s turn. Make a move!`);
     }
 
-    return { playTurn };
+    return { board, playTurn };
 
 })();
