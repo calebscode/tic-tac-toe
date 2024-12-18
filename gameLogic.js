@@ -119,6 +119,10 @@ const GameController = (function () {
         return board.checkForWin() != ' ';
     }
 
+    const resetGame = () => {
+        board.clearBoard();
+    }
+
     const playTurn = (row, col) => {
         //console.log(`${getActivePlayer().name} places an ${getActivePlayer().token} at (${col},${row}).`)
         makePlayerMove(row, col, getActivePlayer().token);
@@ -128,11 +132,11 @@ const GameController = (function () {
             switchPlayers();
         }
         
-        DisplayController.renderGame(getGameState());
+        DisplayController.renderGame();
         //console.log(`${getActivePlayer().name}'s turn. Make a move!`);
     }
 
-    return { playTurn, getGameState, setPlayerName };
+    return { playTurn, getGameState, setPlayerName, resetGame };
 
 })();
 
@@ -141,20 +145,29 @@ const DisplayController = (function () {
     const gameRoot = document.querySelector("#game-root");
     const player1Name = document.querySelector("#p1-name");
     const player2Name = document.querySelector("#p2-name");
+    const clearBtn = document.querySelector("#clear-btn");
 
     // click handler functions
+    clearBtn.addEventListener("click", () => {
+        GameController.resetGame();
+        renderGame();
+    })
+
     player1Name.addEventListener("focusout", () => {
         GameController.setPlayerName(1, player1Name.textContent);
-        renderGame(GameController.getGameState()); // re-render info-text with new name
+        renderGame(); // re-render info-text with new name
     });
 
     player2Name.addEventListener("focusout", () => {
         GameController.setPlayerName(2, player2Name.textContent);
-        renderGame(GameController.getGameState()); // re-render info-text with new name
+        renderGame(); // re-render info-text with new name
     });
     
     // main render function
-    const renderGame = ({ activePlayer, board, winner }) => {
+    const renderGame = () => {
+        // fetch game state
+        const { activePlayer, board, winner } = GameController.getGameState();
+
         // clear DOM
         gameRoot.innerHTML = '';
 
@@ -191,7 +204,7 @@ const DisplayController = (function () {
         gameRoot.appendChild(instructionText);
     }
 
-    renderGame(GameController.getGameState());
+    renderGame();
 
     return { renderGame };
 })();
