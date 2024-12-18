@@ -99,6 +99,13 @@ const GameController = (function () {
         board.makeMove(row, col, token);
     }
 
+    const getGameState = () => {
+        return {
+            activePlayer: getActivePlayer(),
+            board: board.getBoard()
+        }
+    }
+
     const playTurn = (row, col) => {
         console.log(`${getActivePlayer().name} places an ${getActivePlayer().token} at (${col},${row}).`)
         makePlayerMove(row, col, getActivePlayer().token);
@@ -117,6 +124,29 @@ const GameController = (function () {
         console.log(`${getActivePlayer().name}'s turn. Make a move!`);
     }
 
-    return { board, playTurn };
+    return { playTurn, getGameState };
 
+})();
+
+const DisplayController = (function () {
+    // cache DOM
+    const gameRoot = document.querySelector("#game-root");
+
+    const renderGame = ({ activePlayer, board }) => {
+        gameRoot.innerHTML = '';
+        const whoseTurn = document.createElement("h2");
+        whoseTurn.textContent = `${activePlayer.name}'s turn to place an ${activePlayer.token}`;
+        gameRoot.appendChild(whoseTurn);
+
+        for (let row = 0; row < board.length; row++) {
+            for (let col = 0; col < board[row].length; col++) {
+                const cell = document.createElement('span');
+                cell.textContent = board[row][col];
+                gameRoot.appendChild(cell);
+            }
+            gameRoot.appendChild(document.createElement('br'));
+        }
+    }
+
+    return { renderGame };
 })();
